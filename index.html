@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ENCC Play 🎬 - Biblioteca de Videos | Escuela Nacional de Ciencias Comerciales Solola</title>
+<style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+            background: #0b0f19;
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        ::selection { background: #e63946; color: white; }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% -10%, rgba(230, 57, 70, 0.12), transparent 60%),
+                radial-gradient(ellipse 60% 40% at 90% 10%, rgba(79, 70, 229, 0.10), transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .scroll-progress {
+            position: fixed;
+            top: 0; left: 0;
+            height: 4px;
+            width: 0%;
+            background: linear-gradient(90deg, #e63946, #f43f5e, #ec4899);
+            z-index: 1001;
+            box-shadow: 0 0 14px rgba(230, 57, 70, 0.6);
+            transition: width 0.15s ease;
+        }
+
+        /* ===== FLOATING TOP BAR ===== */
+        .topbar {
+            position: fixed;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 8px 18px 8px 10px;
+            background: rgba(11, 15, 25, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 50px;
+            backdrop-filter: blur(24px) saturate(1.8);
+            -webkit-backdrop-filter: blur(24px) saturate(1.8);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            z-index: 1000;
+            max-width: 96vw;
+        }
+        .topbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .topbar .brand img {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(230, 57, 70, 0.7);
+            box-shadow: 0 0 12px rgba(230, 57, 70, 0.4);
+        }
+        .topbar .brand-text { line-height: 1.15; }
+        .topbar .brand-text strong {
+            display: block;
+            font-size: 0.78em;
+            color: white;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+        }
+        .topbar .brand-text span {
+            font-size: 0.62em;
+            color: #f87171;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .topbar .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 14px;
+            border-radius: 20px;
+            background: rgba(230, 57, 70, 0.18);
+            border: 1px solid rgba(230, 57, 70, 0.4);
+            color: #fecaca;
+            font-size: 0.72em;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .topbar .clock {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            font-family: "Courier New", monospace;
+        }
+        .topbar .clock .t { font-size: 0.8em; font-weight: 700; color: white; font-variant-numeric: tabular-nums; }
+        .topbar .clock .d { font-size: 0.55em; color: #94a3b8; letter-spacing: 0.4px; }
+
+        /* ===== HERO ===== */
+        .hero {
+            position: relative;
+            min-height: 78vh;
+            display: flex;
+            align-items: flex-end;
+            overflow: hidden;
+            isolation: isolate;
+        }
+        .hero-backdrop {
+            position: absolute;
+            inset: 0;
+            z-index: -2;
+            transition: opacity 0.9s ease;
+        }
+        .hero-backdrop img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.55) saturate(1.1);
+            transform: scale(1.05);
+        }
+        .hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background: linear-gradient(180deg, rgba(11,15,25,0.55) 0%, rgba(11,15,25,0.15) 35%, rgba(11,15,25,0.65) 70%, #0b0f19 100%),
+                        linear-gradient(90deg, rgba(11,15,25,0.85) 0%, transparent 55%);
+        }
+        .hero-content {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 130px 32px 56px;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(230, 57, 70, 0.2);
+            border: 1px solid rgba(230, 57, 70, 0.5);
+            color: #fca5a5;
+            font-size: 0.72em;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            padding: 7px 16px;
+            border-radius: 20px;
+            margin-bottom: 18px;
+            animation: fadeUp 0.8s ease both;
+        }
+        .hero h1 {
+            font-size: clamp(1.9em, 5vw, 3.6em);
+            line-height: 1.1;
+            max-width: 760px;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+            text-shadow: 0 6px 30px rgba(0, 0, 0, 0.7);
+            animation: fadeUp 0.8s 0.1s ease both;
+        }
+        .hero p {
+            max-width: 620px;
+            color: #cbd5e1;
+            font-size: 1.05em;
+            margin-bottom: 26px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+            animation: fadeUp 0.8s 0.2s ease both;
+        }
+        .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; animation: fadeUp 0.8s 0.3s ease both; }
+        .btn-play {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #e63946;
+            color: white;
+            border: none;
+            font-size: 1em;
+            font-weight: 700;
+            font-family: inherit;
+            padding: 14px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 10px 30px rgba(230, 57, 70, 0.45);
+        }
+        .btn-play:hover { background: #f43f5e; transform: translateY(-2px) scale(1.03); box-shadow: 0 14px 38px rgba(230, 57, 70, 0.6); }
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.14);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            font-size: 1em;
+            font-weight: 600;
+            font-family: inherit;
+            padding: 14px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(8px);
+        }
+        .btn-ghost:hover { background: rgba(255, 255, 255, 0.24); transform: translateY(-2px); }
+        .hero-dots {
+            position: absolute;
+            right: 36px;
+            bottom: 56px;
+            display: flex;
+            gap: 8px;
+        }
+        .hero-dots button {
+            width: 26px;
+            height: 4px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .hero-dots button.on { background: #e63946; width: 40px; box-shadow: 0 0 10px rgba(230, 57, 70, 0.7); }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== CONTROLS ===== */
+        .controls {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 34px 32px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .controls-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .controls-head h2 {
+            font-size: 1.5em;
+            letter-spacing: -0.3px;
+        }
+        .controls-head h2 span { color: #e63946; }
+        .search-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 240px;
+            max-width: 420px;
+        }
+        .search-wrap input {
+            width: 100%;
+            padding: 13px 20px 13px 46px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 30px;
+            color: white;
+            font-size: 0.95em;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .search-wrap input:focus {
+            border-color: #e63946;
+            box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.18);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .search-wrap input::placeholder { color: #64748b; }
+        .search-wrap .sicon {
+            position: absolute;
+            left: 17px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.6;
+        }
+        .chips { display: flex; gap: 10px; flex-wrap: wrap; }
+        .chip {
+            padding: 9px 18px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.06);
+            color: #cbd5e1;
+            font-size: 0.82em;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .chip:hover { background: rgba(255, 255, 255, 0.14); transform: translateY(-2px); }
+        .chip.on {
+            background: #e63946;
+            border-color: #e63946;
+            color: white;
+            box-shadow: 0 6px 18px rgba(230, 57, 70, 0.4);
+        }
+
+        /* ===== GRID ===== */
+        .grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 26px 32px 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 22px;
+            position: relative;
+            z-index: 1;
+        }
+        .card {
+            background: #131a2a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.2), box-shadow 0.35s ease, border-color 0.3s ease;
+            animation: cardIn 0.5s ease both;
+        }
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 22px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(230, 57, 70, 0.4);
+            border-color: rgba(230, 57, 70, 0.5);
+            z-index: 5;
+        }
+        .thumb { position: relative; aspect-ratio: 16 / 9; overflow: hidden; }
+        .thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s ease, filter 0.4s ease;
+        }
+        .card:hover .thumb img { transform: scale(1.12); filter: brightness(0.65); }
+        .thumb .play {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: rgba(230, 57, 70, 0.95);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4em;
+            padding-left: 5px;
+            opacity: 0;
+            transition: all 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.3);
+            box-shadow: 0 8px 26px rgba(230, 57, 70, 0.55);
+        }
+        .card:hover .play { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .badge-cat {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 0.62em;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 5px 11px;
+            border-radius: 14px;
+            background: rgba(11, 15, 25, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(6px);
+        }
+        .badge-short {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.62em;
+            font-weight: 800;
+            letter-spacing: 1px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            background: #e63946;
+            color: white;
+            box-shadow: 0 4px 12px rgba(230, 57, 70, 0.5);
+        }
+        .card-body { padding: 15px 17px 17px; }
+        .card-body h3 {
+            font-size: 0.98em;
+            line-height: 1.35;
+            color: white;
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 2.7em;
+        }
+        .card-body .meta {
+            font-size: 0.75em;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 70px 20px;
+            color: #64748b;
+            display: none;
+        }
+        .empty.show { display: block; }
+        .empty .big { font-size: 3.4em; margin-bottom: 14px; }
+
+        /* ===== MODAL ===== */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(4, 6, 12, 0.9);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 22px;
+        }
+        .modal.open { display: flex; animation: modalIn 0.3s ease both; }
+        @keyframes modalIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-box {
+            width: min(940px, 100%);
+            background: #101625;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 40px 120px rgba(0, 0, 0, 0.8);
+            animation: boxIn 0.4s cubic-bezier(0.2, 0.8, 0.3, 1.1) both;
+        }
+        @keyframes boxIn { from { opacity: 0; transform: translateY(30px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .modal-box .frame { position: relative; aspect-ratio: 16 / 9; background: black; }
+        .modal-box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+        .modal-foot {
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .modal-foot h3 { font-size: 1.05em; color: white; }
+        .modal-foot a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #fca5a5;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 9px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(230, 57, 70, 0.45);
+            background: rgba(230, 57, 70, 0.14);
+            transition: all 0.25s ease;
+        }
+        .modal-foot a:hover { background: rgba(230, 57, 70, 0.3); color: white; }
+        .modal-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(11, 15, 25, 0.85);
+            color: white;
+            font-size: 1.15em;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.25s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .modal-close:hover { background: #e63946; transform: rotate(90deg); }
+
+        /* ===== FOOTER ===== */
+        footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 46px 28px 60px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.25);
+        }
+        footer .f-logo { font-size: 2.6em; margin-bottom: 8px; }
+        footer strong { color: white; }
+        footer p { color: #94a3b8; font-size: 0.95em; margin: 4px 0; }
+        .teacher-info {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: inline-block;
+            padding-left: 34px;
+            padding-right: 34px;
+        }
+        .teacher-info p strong { color: #fca5a5; }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #e63946, #d62839);
+            color: white;
+            font-size: 1.25em;
+            cursor: pointer;
+            z-index: 900;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.35s ease;
+            box-shadow: 0 10px 28px rgba(230, 57, 70, 0.45);
+        }
+        .back-to-top.visible { opacity: 1; visibility: visible; }
+        .back-to-top:hover { transform: translateY(-4px) scale(1.08); }
+
+        @media (max-width: 820px) {
+            .topbar .brand-text strong { display: none; }
+            .topbar .pill { display: none; }
+            .hero { min-height: 66vh; }
+            .hero-dots { right: 24px; bottom: 34px; }
+            .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; padding: 20px 18px 50px; }
+            .controls { padding: 26px 18px 6px; }
+            .card-body h3 { font-size: 0.85em; }
+        }
+        @media print {
+            .topbar, .back-to-top, .scroll-progress, .controls { display: none !important; }
+            body { background: white !important; color: black !important; }
+        }
+    </style>
+</head>
+<body>
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- ===== FLOATING BAR ===== -->
+<nav class="topbar">
+    <a class="brand" href="#">
+        <img alt="Logo ENCC Solola" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjlGRYMf0doBtSJA2ePvivB6ncvsCEvAxhMV9ES8FFNR5FvgD1XWCkbhOl3atJHGDuXAVGXNKIZmnQPUVV1Q5MB2G93qQjAvEFwPluRvy44S1_gqNfWi_gVjg-YN2yN_VXaI_AT8ld-lpapr8a4qMd1tbH63mZbWBJSs1bVIvOIdjhb/s220/logo.jpg"/>
+        <div class="brand-text">
+            <strong>Escuela Nacional de Ciencias Comerciales Solola</strong>
+            <span>ENCC Play</span>
+        </div>
+    </a>
+    <span class="pill">🎬 <span id="videoCount">16</span> videos</span>
+    <div class="clock">
+        <span class="t" id="clockTime">--:--:--</span>
+        <span class="d" id="clockDate">---</span>
+    </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<header class="hero" id="hero">
+    <div class="hero-backdrop" id="heroBackdrop"><img alt="" src=""/></div>
+    <div class="hero-content">
+        <span class="hero-badge" id="heroBadge">⭐ Destacado</span>
+        <h1 id="heroTitle">—</h1>
+        <p id="heroDesc">—</p>
+        <div class="hero-actions">
+            <button class="btn-play" id="heroPlay">▶ Reproducir</button>
+            <button class="btn-ghost" id="heroAll">🎬 Ver toda la biblioteca</button>
+        </div>
+    </div>
+    <div class="hero-dots" id="heroDots"></div>
+</header>
+
+<!-- ===== CONTROLS ===== -->
+<section class="controls" id="biblioteca">
+    <div class="controls-head">
+        <h2>🎬 Biblioteca <span>de Videos</span></h2>
+        <div class="search-wrap">
+            <span class="sicon">🔍</span>
+            <input autocomplete="off" id="searchInput" placeholder="Buscar video... (ej: lago, valores, inscripciones)" type="text"/>
+        </div>
+    </div>
+    <div class="chips" id="chips">
+        <button class="chip on" data-cat="todos">✨ Todos</button>
+        <button class="chip" data-cat="naturaleza">🌿 Naturaleza</button>
+        <button class="chip" data-cat="cultura">🏛️ Cultura y Tradiciones</button>
+        <button class="chip" data-cat="encc">🏫 Comunidad ENCC</button>
+        <button class="chip" data-cat="valores">📚 Valores y Aprendizaje</button>
+        <button class="chip" data-cat="variedades">🎲 Variedades</button>
+    </div>
+</section>
+
+<!-- ===== GRID ===== -->
+<main class="grid" id="grid"></main>
+<div class="empty" id="empty">
+    <div class="big">🎬</div>
+    <h3>Sin resultados</h3>
+    <p>No se encontraron videos con esa busqueda. Intenta con otra palabra.</p>
+</div>
+
+<!-- ===== MODAL ===== -->
+<div class="modal" id="modal">
+    <div class="modal-box">
+        <button class="modal-close" id="modalClose" title="Cerrar">✕</button>
+        <div class="frame"><iframe allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen id="modalFrame" title="Reproductor de video"></iframe></div>
+        <div class="modal-foot">
+            <h3 id="modalTitle">—</h3>
+            <a href="#" id="modalOpen" target="_blank" rel="noopener">Abrir en YouTube ↗</a>
+        </div>
+    </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+    <div class="f-logo">📽️</div>
+    <p><strong>Escuela Nacional de Ciencias Comerciales Solola</strong></p>
+    <p>Formando lideres para el desarrollo de Guatemala</p>
+    <div class="teacher-info">
+        <p><strong>👨‍🏫 Catedratico: Mauro Alfredo Marroquin Godines</strong></p>
+        <p>ENCC Play - Biblioteca de videos de la clase</p>
+        <p style="font-size: 0.82em; opacity: 0.75; margin-top: 8px;">Material elaborado para el aprendizaje de herramientas informaticas comerciales</p>
+    </div>
+</footer>
+
+<button class="back-to-top" id="backToTop" title="Volver arriba">⬆️</button>
+
+<script>
+        // ===== VIDEO DATA =====
+        const CATS = {
+            naturaleza: "🌿 Naturaleza",
+            cultura: "🏛️ Cultura",
+            encc: "🏫 Comunidad ENCC",
+            valores: "📚 Valores",
+            variedades: "🎲 Variedades"
+        };
+        const VIDEOS = [
+            { id: "McL9Qn5Lk30", title: "¿Por qué Google se llama Google?", cat: "variedades", short: true, featured: true, desc: "Un dato curioso de tecnologia que nadie te habia contado. Descubre el origen del nombre del buscador mas famoso del mundo." },
+            { id: "S2RcoDj67sM", title: "Lo que paso durante la sequia", cat: "naturaleza", desc: "Testimonio y reflexion sobre los efectos de la sequia en nuestra comunidad y la importancia de cuidar el agua." },
+            { id: "kRGBOdErBUk", title: "VOLVER A NUESTRA NIÑEZ", cat: "variedades", desc: "Un emotivo viaje en el tiempo para recordar los momentos mas bonitos de la niñez." },
+            { id: "XJbuthmIm50", title: "DÍA DE MUERTOS CUARTO PERITO CONTADOR", cat: "cultura", featured: true, desc: "Trabajo de cuarto perito contador sobre una de las tradiciones mas importantes de Guatemala: el Día de Muertos." },
+            { id: "zubDvJe6ymA", title: "La historia de San Jorge la laguna", cat: "cultura", desc: "Conoce la historia y las leyendas del municipio de San Jorge La Laguna, junto al lago de Atitlan." },
+            { id: "x7yrsiQZp00", title: "El Cuidado de la Naturaleza", cat: "naturaleza", desc: "Reflexion sobre la responsabilidad que tenemos todos de proteger y cuidar nuestro entorno natural." },
+            { id: "_-UE4-I2G5k", title: "EL PODER DE LOS VALORES", cat: "valores", desc: "Un mensaje sobre la importancia de los valores en nuestra vida diaria y en la formacion como profesionales." },
+            { id: "1Hp5Pnxt-aw", title: "Cuidemos el lago Atitlán 💚🤍💛", cat: "naturaleza", featured: true, desc: "Conciencia ambiental: el lago de Atitlan es nuestro tesoro mas grande y su cuidado depende de todos." },
+            { id: "yKPOqCeAIHw", title: "El futuro de nuestro lago 🌊 está en nuestras manos 🤲🏼", cat: "naturaleza", desc: "Cada accion cuenta. El futuro del lago de Atitlan esta en las manos de la nueva generacion." },
+            { id: "c2H965gnWzc", title: "Inscripciones abiertas 2027 ¡Se parte de la Escuela Nacional de Ciencias Comerciales!", cat: "encc", desc: "La ENCC Solola te abre sus puertas: inscripciones abiertas para el ciclo 2027." },
+            { id: "-ZugAbzWCbw", title: "Escuela Nacional de Ciencias Comerciales", cat: "encc", short: true, desc: "Un vistazo rapido a nuestra escuela: formando lideres para el desarrollo de Guatemala." },
+            { id: "sHSY1lJoxb0", title: "Película de terror y comedia", cat: "variedades", desc: "Proyecto creativo de los estudiantes mezclando suspenso y humor en un solo video." },
+            { id: "Twb2POD9BB4", title: "Primeros auxilios, posible ahogamiento, Qué hacer, Cómo reaccionar", cat: "valores", desc: "Aprendizaje vital: como reaccionar ante un posible ahogamiento y brindar primeros auxilios." },
+            { id: "gcxCK-J8Ves", title: "RIQUEZA CULTURAL DE SOLOLA", cat: "cultura", featured: true, desc: "Un recorrido por la riqueza cultural del departamento de Solola: tradiciones, paisajes y su gente." },
+            { id: "_YeI6BaswRQ", title: "¡Inscripciones abiertas! 2027 Escuela Nacional de Ciencias Comerciales de Sololá", cat: "encc", desc: "Se parte de la familia ENCC: inscripciones abiertas para el ciclo lectivo 2027." },
+            { id: "IadVYWSw4Lg", title: "EL CORAZÓN DEL MUNDO MAYA Sololá", cat: "cultura", desc: "Solola, el corazon del mundo maya: cultura viva, historia y tradicion." }
+        ];
+
+        const thumb = (id, hq) => "https://img.youtube.com/vi/" + id + "/" + (hq ? "sddefault.jpg" : "hqdefault.jpg");
+
+        // ===== RENDER GRID =====
+        const grid = document.getElementById("grid");
+        const emptyMsg = document.getElementById("empty");
+        let activeCat = "todos";
+        let query = "";
+
+        function render() {
+            grid.innerHTML = "";
+            const list = VIDEOS.filter(v => {
+                const okCat = activeCat === "todos" || v.cat === activeCat;
+                const okQ = v.title.toLowerCase().includes(query);
+                return okCat && okQ;
+            });
+            list.forEach((v, i) => {
+                const card = document.createElement("article");
+                card.className = "card";
+                card.style.animationDelay = (i * 0.04) + "s";
+                card.innerHTML =
+                    '<div class="thumb">' +
+                        '<img loading="lazy" alt="Miniatura: ' + v.title.replace(/"/g, "&quot;") + '" src="' + thumb(v.id) + '"/>' +
+                        '<span class="badge-cat">' + CATS[v.cat] + "</span>" +
+                        (v.short ? '<span class="badge-short">SHORT</span>' : "") +
+                        '<span class="play">▶</span>' +
+                    "</div>" +
+                    '<div class="card-body"><h3>' + v.title + "</h3>" +
+                    '<div class="meta">📺 YouTube &nbsp;·&nbsp; ▶ Reproducir ahora</div></div>';
+                card.addEventListener("click", () => openModal(v));
+                grid.appendChild(card);
+            });
+            emptyMsg.classList.toggle("show", list.length === 0);
+            document.getElementById("videoCount").textContent = VIDEOS.length;
+        }
+
+        // ===== FILTERS & SEARCH =====
+        document.querySelectorAll(".chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                document.querySelectorAll(".chip").forEach(c => c.classList.remove("on"));
+                chip.classList.add("on");
+                activeCat = chip.getAttribute("data-cat");
+                render();
+            });
+        });
+        document.getElementById("searchInput").addEventListener("input", function() {
+            query = this.value.toLowerCase().trim();
+            render();
+        });
+
+        // ===== MODAL PLAYER =====
+        const modal = document.getElementById("modal");
+        const modalFrame = document.getElementById("modalFrame");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalOpen = document.getElementById("modalOpen");
+
+        function openModal(v) {
+            modalTitle.textContent = v.title;
+            modalOpen.href = "https://www.youtube.com/watch?v=" + v.id;
+            modalFrame.src = "https://www.youtube.com/embed/" + v.id + "?autoplay=1&rel=0";
+            modal.classList.add("open");
+            document.body.style.overflow = "hidden";
+        }
+        function closeModal() {
+            modal.classList.remove("open");
+            modalFrame.src = "";
+            document.body.style.overflow = "";
+        }
+        document.getElementById("modalClose").addEventListener("click", closeModal);
+        modal.addEventListener("click", function(e) { if (e.target === modal) closeModal(); });
+        document.addEventListener("keydown", function(e) { if (e.key === "Escape") closeModal(); });
+
+        // ===== HERO ROTATION =====
+        const featured = VIDEOS.filter(v => v.featured);
+        let heroIdx = 0;
+        let heroTimer = null;
+        const heroBackdrop = document.getElementById("heroBackdrop");
+        const heroImg = heroBackdrop.querySelector("img");
+        const heroTitle = document.getElementById("heroTitle");
+        const heroDesc = document.getElementById("heroDesc");
+        const heroBadge = document.getElementById("heroBadge");
+        const heroDots = document.getElementById("heroDots");
+
+        featured.forEach((v, i) => {
+            const dot = document.createElement("button");
+            dot.addEventListener("click", () => { showHero(i); restartHeroTimer(); });
+            heroDots.appendChild(dot);
+        });
+
+        function showHero(i) {
+            heroIdx = i;
+            const v = featured[i];
+            heroBackdrop.style.opacity = "0";
+            setTimeout(() => {
+                heroImg.src = thumb(v.id, true);
+                heroImg.onerror = function() { this.onerror = null; this.src = thumb(v.id); };
+                heroBackdrop.style.opacity = "1";
+            }, 250);
+            heroBadge.textContent = v.short ? "⚡ Short destacado" : "⭐ Video destacado";
+            heroTitle.textContent = v.title;
+            heroDesc.textContent = v.desc;
+            document.getElementById("heroPlay").onclick = () => openModal(v);
+            Array.from(heroDots.children).forEach((d, j) => d.classList.toggle("on", j === i));
+        }
+        function restartHeroTimer() {
+            clearInterval(heroTimer);
+            heroTimer = setInterval(() => showHero((heroIdx + 1) % featured.length), 7000);
+        }
+        showHero(0);
+        restartHeroTimer();
+
+        document.getElementById("heroAll").addEventListener("click", () => {
+            document.getElementById("biblioteca").scrollIntoView({ behavior: "smooth" });
+        });
+
+        // ===== CLOCK =====
+        const diasSemana = ["Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"];
+        const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        function updateClock() {
+            const now = new Date();
+            document.getElementById("clockTime").textContent =
+                String(now.getHours()).padStart(2, "0") + ":" +
+                String(now.getMinutes()).padStart(2, "0") + ":" +
+                String(now.getSeconds()).padStart(2, "0");
+            document.getElementById("clockDate").textContent =
+                diasSemana[now.getDay()] + ", " + now.getDate() + " de " + meses[now.getMonth()] + " de " + now.getFullYear();
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // ===== SCROLL PROGRESS & BACK TO TOP =====
+        const backToTop = document.getElementById("backToTop");
+        window.addEventListener("scroll", function() {
+            const h = document.documentElement;
+            document.getElementById("scrollProgress").style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100 + "%";
+            backToTop.classList.toggle("visible", window.pageYOffset > 400);
+        }, { passive: true });
+        backToTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+        // ===== INIT =====
+        render();
+    </script>
+</body>
+</html>
